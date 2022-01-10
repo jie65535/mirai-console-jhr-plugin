@@ -1,5 +1,29 @@
-# mirai-console-plugin-template
+# J Horse Racing
+## 一个简单的赛马插件
 
-[Mirai Console](https://github.com/mamoe/mirai-console) 插件模板, 使用 Kotlin + Gradle.
+### 赛马指令
+- `#开启赛马` - 在本群中启用赛马功能（需管理身份）
+- `#关闭赛马` - 在本群中禁用赛马功能（需管理身份）
+- `#签到` - 获得签到奖励（可配置）
+- `#赛马` - 比赛开盘
+- `押马[1-5]#\d+` - 押n号马m币 例：押马5#1000
+- `#开始赛马` - 开始进行比赛
+- `我有多少钱` - 查询余额（指令可配置）
 
-[如何使用](https://github.com/project-mirai/how-to-use-plugin-template)
+### 插件指令
+- `/jhr enable <group>` - 启用指定群赛马
+- `/jhr disable <group>` - 禁用指定群赛马
+
+### 配置
+- `goodEvents` 好消息
+- `badEvents`  坏消息
+
+
+### 游戏流程
+通过签到得到初始资金进行赛马游戏
+
+需要管理员或通过命令在群内启用赛马，然后发送`#赛马`开盘，下注完成后，通过`#开始赛马`来进行比赛。
+
+等待比赛结束，结算奖励。
+
+发送`我有多少钱`或者其它查询余额命令来查询当前余额。（可私聊查询）

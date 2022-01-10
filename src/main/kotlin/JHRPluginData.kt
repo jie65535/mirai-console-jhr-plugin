@@ -7,6 +7,6 @@ import net.mamoe.mirai.console.data.value
 object JHRPluginData : AutoSavePluginData("HorseRacingPluginData") {
 
     @ValueDescription("用户存款")
-    val Scores: HashMap<Long, Int> by value()
+    val Scores: MutableMap<Long, Int> by value()
 
 }
