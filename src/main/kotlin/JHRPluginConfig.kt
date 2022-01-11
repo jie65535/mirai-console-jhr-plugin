@@ -62,6 +62,12 @@ object JHRPluginConfig : AutoSavePluginConfig("HorseRacingPluginConfig") {
 
             )
     )
+
+    /**
+     * 自动开始时间(s)
+     */
+    @ValueDescription("自动开始时间(s)")
+    var autoStartTime by value(180)
 }
 //    @ValueDescription("赛马数量")
 //    val horseCount by value(5)

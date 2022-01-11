@@ -7,11 +7,15 @@ import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.event.GlobalEventChannel
-import net.mamoe.mirai.event.events.*
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.info
 import java.util.*
 import kotlin.random.Random
@@ -66,7 +70,6 @@ object JHorseRacing : KotlinPlugin(
         "\uD83D\uDC1C"
     )
     private val ranks = mutableMapOf<Long, Rank>()
-    private fun newRank(job: Job) = Rank(List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }, job)
     private fun drawHorse(horses: List<Horse>): String {
         val sb = StringBuilder()
         for ((i, horse) in horses.withIndex()) {
@@ -79,6 +82,69 @@ object JHorseRacing : KotlinPlugin(
             sb.appendLine()
         }
         return sb.toString()
+    }
+    private suspend fun startRank(subject: Group) {
+        if (ranks[subject.id] != null) return
+        subject.sendMessage("赛马开始辣，走过路过不要错过")
+        val rank = Rank(List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }, Job())
+        ranks[subject.id] = rank
+        subject.sendMessage(drawHorse(rank.horses))
+        launch(rank.job) {
+            val winners = mutableListOf<Int>()
+            while (winners.size == 0) {
+                delay(Random.nextLong(1000) + 2000)
+                // 比赛事件触发
+                val steps = (1..3).random() //事件触发前进或后退随机大小
+                val eventHorseIndex = Random.nextInt(rank.horses.size)
+                val eventHorse = rank.horses[eventHorseIndex]
+                val eventMsg = if (Random.nextInt(77) > 32) {
+                    eventHorse.position += steps
+                    JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
+                } else {
+                    eventHorse.position -= steps
+                    JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
+                }
+                val number = (eventHorseIndex + 1).toString()
+                subject.sendMessage(
+                    eventMsg
+                        .replace("?", number)
+                        .replace("？", number)
+                )
+
+                // 所有马前进
+                for ((i, horse) in rank.horses.withIndex()) {
+                    if (++horse.position >= lapLength) {
+                        winners.add(i + 1)
+                    }
+                }
+                subject.sendMessage(drawHorse(rank.horses))
+
+                delay(Random.nextLong(1000) + 3000)
+            }
+            val mb = MessageChainBuilder()
+            if (winners.size == 1) {
+                mb.add("${winners[0]}最终赢得了胜利，让我们为它鼓掌")
+            } else {
+                mb.add("${winners.joinToString()}一起赢得了胜利，让我们为它们鼓掌")
+            }
+            ranks.remove(subject.id)
+            val pool = pools.remove(subject.id)
+            if (pool != null && pool.size > 0) {
+                for (bet in pool) {
+                    val score = JHRPluginData.Scores[bet.id]!!
+                    val income = if (winners.indexOf(bet.number) != -1) {
+                        (bet.score * 1.5).toInt()
+                    } else {
+                        -bet.score
+                    }
+                    JHRPluginData.Scores[bet.id] = score + income
+                    mb.add("\n")
+                    mb.add(At(bet.id))
+                    mb.add(PlainText("收益${income}"))
+                }
+            }
+            subject.sendMessage(mb.asMessageChain())
+        }
     }
 
     // endregion
@@ -107,69 +173,17 @@ object JHorseRacing : KotlinPlugin(
                     if (pools[subject.id] != null) {
                         subject.sendMessage("已经有比赛在进行了")
                     } else {
-                        pools[subject.id] = mutableListOf()
-                        subject.sendMessage("赛马比赛开盘，有钱交钱妹钱交人")
+                        val pool = mutableListOf<Bet>()
+                        pools[subject.id] = pool
+                        subject.sendMessage("赛马比赛开盘，有钱交钱妹钱交人。\n${JHRPluginConfig.autoStartTime}秒后将自动开始")
+                        launch {
+                            delay(JHRPluginConfig.autoStartTime * 1000L)
+                            if (pools[subject.id] == pool)
+                                startRank(subject)
+                        }
                     }
                 }
-                msg.startsWith("开始赛马") -> {
-                    if (ranks[subject.id] != null) return@subscribeAlways
-                    subject.sendMessage("赛马开始辣，走过路过不要错过")
-                    val rank = newRank(Job())
-                    ranks[subject.id] = rank
-                    subject.sendMessage(drawHorse(rank.horses))
-                    launch(rank.job) {
-                        var winner = -1
-                        while (winner == -1) {
-                            delay(Random.nextLong(1000) + 2000)
-                            // 比赛事件触发
-                            val steps = (1..3).random() //事件触发前进或后退随机大小
-                            val eventHorseIndex = Random.nextInt(rank.horses.size)
-                            val eventHorse = rank.horses[eventHorseIndex]
-                            val eventMsg = if (Random.nextInt(77) > 32) {
-                                eventHorse.position += steps
-                                JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
-                            } else {
-                                eventHorse.position -= steps
-                                JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
-                            }
-                            val number = (eventHorseIndex + 1).toString()
-                            subject.sendMessage(
-                                eventMsg
-                                    .replace("?", number)
-                                    .replace("？", number)
-                            )
-
-                            // 所有马前进
-                            for ((i, horse) in rank.horses.withIndex()) {
-                                if (++horse.position >= lapLength) {
-                                    winner = i + 1
-                                }
-                            }
-                            subject.sendMessage(drawHorse(rank.horses))
-
-                            delay(Random.nextLong(1000) + 3000)
-                        }
-                        val mb = MessageChainBuilder()
-                        mb.add("${winner}最终赢得了胜利，让我们为它鼓掌")
-                        ranks.remove(subject.id)
-                        val pool = pools.remove(subject.id)
-                        if (pool != null && pool.size > 0) {
-                            for (bet in pool) {
-                                val score = JHRPluginData.Scores[bet.id]!!
-                                val income = if (bet.number == winner) {
-                                    (bet.score * 1.5).toInt()
-                                } else {
-                                    -bet.score
-                                }
-                                JHRPluginData.Scores[bet.id] = score + income
-                                mb.add("\n")
-                                mb.add(At(bet.id))
-                                mb.add(PlainText("收益${income}"))
-                            }
-                        }
-                        subject.sendMessage(mb.asMessageChain())
-                    }
-                }
+                msg.startsWith("开始赛马") -> launch { startRank(subject) }
                 msg == "关闭赛马" -> {
                     if (sender.permission.isOperator()) {
                         JHRPluginConfig.enabledGroups.remove(subject.id)
