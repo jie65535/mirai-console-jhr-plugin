@@ -67,7 +67,10 @@ object JHorseRacing : KotlinPlugin(
         "\uD83D\uDC34",
         "\uD83D\uDC14",
         "\uD83D\uDEBD",
-        "\uD83D\uDC1C"
+        "\uD83D\uDC1C",
+        "\uD83D\uDC1C",
+        "\uD83D\uDC0E",
+        "\uD38D\uDFC7"
     )
     private val ranks = mutableMapOf<Long, Rank>()
     private fun drawHorse(horses: List<Horse>): String {
