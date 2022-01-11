@@ -59,6 +59,9 @@ object JHorseRacing : KotlinPlugin(
     private data class Horse(val type: Int, var position: Int = 0)
     private data class Rank(val horses: List<Horse>, val job: Job)
 
+    /**
+     * 奖池
+     */
     private val pools = mutableMapOf<Long, MutableList<Bet>>()
     private const val horseCount = 5 //多少个马
     private const val lapLength = 20 //赛道长度
@@ -87,6 +90,11 @@ object JHorseRacing : KotlinPlugin(
         return sb.toString()
     }
     private suspend fun startRank(subject: Group) {
+        val t = pools[subject.id] ?: return
+        if (t.size == 0) {
+            subject.sendMessage("无人下注，无法开始哦")
+            return
+        }
         if (ranks[subject.id] != null) return
         logger.info("开始赛马")
         subject.sendMessage("赛马开始辣，走过路过不要错过")
