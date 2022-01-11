@@ -50,7 +50,7 @@ object JHorseRacing : KotlinPlugin(
     // endregion
 
     //随机签到奖励范围
-    val signReward
+    private val signReward
         get() = (100..1000).random()
 
     // region 赛马
@@ -85,6 +85,7 @@ object JHorseRacing : KotlinPlugin(
     }
     private suspend fun startRank(subject: Group) {
         if (ranks[subject.id] != null) return
+        logger.info("开始赛马")
         subject.sendMessage("赛马开始辣，走过路过不要错过")
         val rank = Rank(List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }, Job())
         ranks[subject.id] = rank
@@ -123,9 +124,9 @@ object JHorseRacing : KotlinPlugin(
             }
             val mb = MessageChainBuilder()
             if (winners.size == 1) {
-                mb.add("${winners[0]}最终赢得了胜利，让我们为它鼓掌")
+                mb.add("${winners[0]} 最终赢得了胜利，让我们为它鼓掌")
             } else {
-                mb.add("${winners.joinToString()}一起赢得了胜利，让我们为它们鼓掌")
+                mb.add("${winners.joinToString()} 一起赢得了胜利，让我们为它们鼓掌")
             }
             ranks.remove(subject.id)
             val pool = pools.remove(subject.id)
@@ -140,10 +141,11 @@ object JHorseRacing : KotlinPlugin(
                     JHRPluginData.Scores[bet.id] = score + income
                     mb.add("\n")
                     mb.add(At(bet.id))
-                    mb.add(PlainText("收益${income}"))
+                    mb.add(PlainText(" 收益 $income"))
                 }
             }
             subject.sendMessage(mb.asMessageChain())
+            logger.info("赛马结束")
         }
     }
 
@@ -164,6 +166,7 @@ object JHorseRacing : KotlinPlugin(
                 if (msg == "开启赛马" && sender.permission.isOperator()) {
                     JHRPluginConfig.enabledGroups.add(group.id)
                     subject.sendMessage("已开启赛马")
+                    logger.info("群 ${subject.id} 已启用赛马")
                 }
                 return@subscribeAlways
             }
@@ -173,13 +176,15 @@ object JHorseRacing : KotlinPlugin(
                     if (pools[subject.id] != null) {
                         subject.sendMessage("已经有比赛在进行了")
                     } else {
+                        logger.info("群 ${subject.id} 已开盘")
                         val pool = mutableListOf<Bet>()
                         pools[subject.id] = pool
                         subject.sendMessage("赛马比赛开盘，有钱交钱妹钱交人。\n${JHRPluginConfig.autoStartTime}秒后将自动开始")
                         launch {
                             delay(JHRPluginConfig.autoStartTime * 1000L)
-                            if (pools[subject.id] == pool)
+                            if (pools[subject.id] == pool) {
                                 startRank(subject)
+                            }
                         }
                     }
                 }
@@ -188,6 +193,7 @@ object JHorseRacing : KotlinPlugin(
                     if (sender.permission.isOperator()) {
                         JHRPluginConfig.enabledGroups.remove(subject.id)
                         subject.sendMessage("已关闭赛马")
+                        logger.info("群 ${subject.id} 已关闭赛马")
                     }
                 }
                 msg == "签到" -> {
@@ -246,6 +252,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.goodEvents.indexOf(event) == -1) {
                         JHRPluginConfig.goodEvents.add(event)
+                        logger.info("已增加好事件'$event'")
                     }
                     subject.sendMessage("OK")
                 }
@@ -256,6 +263,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.badEvents.indexOf(event) == -1) {
                         JHRPluginConfig.badEvents.add(event)
+                        logger.info("已增加坏事件'$event'")
                     }
                     subject.sendMessage("OK")
                 }
