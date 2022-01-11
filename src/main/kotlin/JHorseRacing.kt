@@ -13,7 +13,6 @@ import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.info
 import java.util.*
-import java.util.regex.Pattern
 import kotlin.random.Random
 
 
@@ -45,41 +44,24 @@ object JHorseRacing : KotlinPlugin(
     }
     // endregion
 
+    //随机签到奖励范围
+    val signReward
+        get() = (100..1000).random()
+
     // region 赛马
 
     private data class Bet(val id: Long, val number: Int, val score: Int)
     private data class Horse(val type: Int, var position: Int = 0)
 
     private val pools = mutableMapOf<Long, MutableList<Bet>>()
-    private const val horseCount = 5
-    private const val lapLength = 10
+    private const val horseCount = 5 //多少个马
+    private const val lapLength = 20 //赛道长度
     private val horseTypes = listOf(
         "\uD83E\uDD84",
         "\uD83D\uDC34",
-        "\uD83D\uDC3A",
-        "\uD83D\uDC02",
-        "\uD83D\uDC04",
-        "\uD83D\uDC0E",
-        "\uD83D\uDC07",
-        "\uD83D\uDC13",
-        "\uD83E\uDD8F",
-        "\uD83D\uDC29",
-        "\uD83D\uDC2E",
-        "\uD83D\uDC35",
-        "\uD83D\uDC19",
-        "\uD83D\uDC80",
-        "\uD83D\uDC24",
-        "\uD83D\uDC28",
-        "\uD83D\uDC2E",
         "\uD83D\uDC14",
-        "\uD83D\uDC38",
-        "\uD83D\uDC7B",
-        "\uD83D\uDC1B",
-        "\uD83D\uDC20",
-        "\uD83D\uDC36",
-        "\uD83D\uDC2F",
-        "  ",
-        "\uD83D\uDEBD"
+        "\uD83D\uDEBD",
+        "\uD83D\uDC1C"
     )
     private val ranks = mutableMapOf<Long, List<Horse>>()
     private fun newRank() = List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }
@@ -111,7 +93,7 @@ object JHorseRacing : KotlinPlugin(
 
             // 确认该群是否启用赛马
             if (JHRPluginConfig.enabledGroups.indexOf(group.id) == -1) {
-                if (msg == "#开启赛马" && sender.permission.isOperator()) {
+                if (msg == "开启赛马" && sender.permission.isOperator()) {
                     JHRPluginConfig.enabledGroups.add(group.id)
                     subject.sendMessage("已开启赛马")
                 }
@@ -119,7 +101,7 @@ object JHorseRacing : KotlinPlugin(
             }
 
             when {
-                msg.startsWith("#赛马") -> {
+                msg.startsWith("赛马") -> {
                     if (pools[subject.id] != null) {
                         subject.sendMessage("已经有比赛在进行了")
                     } else {
@@ -127,7 +109,7 @@ object JHorseRacing : KotlinPlugin(
                         subject.sendMessage("赛马比赛开盘，有钱交钱妹钱交人")
                     }
                 }
-                msg.startsWith("#开始赛马") -> {
+                msg.startsWith("开始赛马") -> {
                     subject.sendMessage("赛马开始辣，走过路过不要错过")
                     val rank = newRank()
                     ranks[subject.id] = rank
@@ -137,13 +119,14 @@ object JHorseRacing : KotlinPlugin(
                         while (winner == -1) {
                             delay(Random.nextLong(1000) + 2000)
                             // 比赛事件触发
+                            val horserandom = (1..3).random() //事件触发前进或后退随机大小
                             val eventHorseIndex = Random.nextInt(rank.size)
                             val eventHorse = rank[eventHorseIndex]
                             val eventMsg = if (Random.nextInt(77) > 32) {
-                                eventHorse.position += 1
+                                eventHorse.position += (horserandom)
                                 JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
                             } else {
-                                eventHorse.position -= 1
+                                eventHorse.position -= (horserandom)
                                 JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
                             }
                             subject.sendMessage(eventMsg.replace("?", (eventHorseIndex + 1).toString()))
@@ -171,25 +154,25 @@ object JHorseRacing : KotlinPlugin(
                         subject.sendMessage("${winner}最终赢得了胜利，让我们为它鼓掌")
                     }
                 }
-                msg == "#关闭赛马" -> {
+                msg == "关闭赛马" -> {
                     if (sender.permission.isOperator()) {
                         JHRPluginConfig.enabledGroups.remove(subject.id)
                         subject.sendMessage("已关闭赛马")
                     }
                 }
-                msg == "#签到" -> {
+                msg == "签到" -> {
                     if (checkSign(sender.id)) {
                         subject.sendMessage("一天只能签到一次噢")
                     } else {
                         signUpSheet.add(sender.id)
                         val score = JHRPluginData.Scores[sender.id]
-                        val reward = JHRPluginConfig.signReward
+                        val reward = signReward
                         if (score != null) {
                             JHRPluginData.Scores[sender.id] = score + reward
-                            subject.sendMessage("马币+${reward}，现在马币：${score + reward}")
+                            subject.sendMessage("硬币+${reward}，现有${score + reward}硬币")
                         } else {
                             JHRPluginData.Scores[sender.id] = reward
-                            subject.sendMessage("马币+${reward}")
+                            subject.sendMessage("硬币+${reward}")
                         }
                     }
                 }
@@ -201,7 +184,7 @@ object JHorseRacing : KotlinPlugin(
                     }
 
                     val m = msg.removePrefix("押马")
-                    val p = m.split('#')
+                    val p = m.split(' ')
                     if (p.size != 2) {
                         return@subscribeAlways
                     }
@@ -240,7 +223,7 @@ object JHorseRacing : KotlinPlugin(
                         ret.add("，还没有签到哦")
                     }
                 } else {
-                    ret.add("锅里没有一滴油")
+                    ret.add("手里捧着窝窝头，菜里没有一滴油")
                 }
                 subject.sendMessage(ret.asMessageChain())
             }
