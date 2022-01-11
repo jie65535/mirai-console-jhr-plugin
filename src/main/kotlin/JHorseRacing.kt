@@ -193,6 +193,8 @@ object JHorseRacing : KotlinPlugin(
                     }
                 }
                 msg.startsWith("押马") -> {
+                    // 如果比赛进行中则不允许下注
+                    if (ranks[subject.id] != null) return@subscribeAlways
                     val pool = pools[subject.id] ?: return@subscribeAlways
                     if (pool.any { it.id == sender.id }) {
                         subject.sendMessage("你已经下过注辣")
