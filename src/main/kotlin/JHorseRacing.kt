@@ -1,5 +1,6 @@
 package top.jie65535.jhr
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -52,6 +53,7 @@ object JHorseRacing : KotlinPlugin(
 
     private data class Bet(val id: Long, val number: Int, val score: Int)
     private data class Horse(val type: Int, var position: Int = 0)
+    private data class Rank(val horses: List<Horse>, val job: Job)
 
     private val pools = mutableMapOf<Long, MutableList<Bet>>()
     private const val horseCount = 5 //多少个马
@@ -63,8 +65,8 @@ object JHorseRacing : KotlinPlugin(
         "\uD83D\uDEBD",
         "\uD83D\uDC1C"
     )
-    private val ranks = mutableMapOf<Long, List<Horse>>()
-    private fun newRank() = List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }
+    private val ranks = mutableMapOf<Long, Rank>()
+    private fun newRank(job: Job) = Rank(List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }, job)
     private fun drawHorse(horses: List<Horse>): String {
         val sb = StringBuilder()
         for ((i, horse) in horses.withIndex()) {
@@ -110,48 +112,57 @@ object JHorseRacing : KotlinPlugin(
                     }
                 }
                 msg.startsWith("开始赛马") -> {
+                    if (ranks[subject.id] != null) return@subscribeAlways
                     subject.sendMessage("赛马开始辣，走过路过不要错过")
-                    val rank = newRank()
+                    val rank = newRank(Job())
                     ranks[subject.id] = rank
-                    subject.sendMessage(drawHorse(rank))
-                    launch {
+                    subject.sendMessage(drawHorse(rank.horses))
+                    launch(rank.job) {
                         var winner = -1
                         while (winner == -1) {
                             delay(Random.nextLong(1000) + 2000)
                             // 比赛事件触发
-                            val horserandom = (1..3).random() //事件触发前进或后退随机大小
-                            val eventHorseIndex = Random.nextInt(rank.size)
-                            val eventHorse = rank[eventHorseIndex]
+                            val steps = (1..3).random() //事件触发前进或后退随机大小
+                            val eventHorseIndex = Random.nextInt(rank.horses.size)
+                            val eventHorse = rank.horses[eventHorseIndex]
                             val eventMsg = if (Random.nextInt(77) > 32) {
-                                eventHorse.position += (horserandom)
+                                eventHorse.position += steps
                                 JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
                             } else {
-                                eventHorse.position -= (horserandom)
+                                eventHorse.position -= steps
                                 JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
                             }
                             subject.sendMessage(eventMsg.replace("?", (eventHorseIndex + 1).toString()))
 
                             // 所有马前进
-                            for ((i, horse) in rank.withIndex()) {
+                            for ((i, horse) in rank.horses.withIndex()) {
                                 if (++horse.position >= lapLength) {
                                     winner = i + 1
                                 }
                             }
-                            subject.sendMessage(drawHorse(rank))
+                            subject.sendMessage(drawHorse(rank.horses))
 
                             delay(Random.nextLong(1000) + 3000)
                         }
+                        val mb = MessageChainBuilder()
+                        mb.add("${winner}最终赢得了胜利，让我们为它鼓掌")
+                        ranks.remove(subject.id)
                         val pool = pools.remove(subject.id)
-                        for (bet in pool!!) {
-                            val score = JHRPluginData.Scores[bet.id]!!
-                            JHRPluginData.Scores[bet.id] = score + if (bet.number == winner) {
-                                (bet.score * 1.5).toInt()
-                            } else {
-                                -bet.score
+                        if (pool != null && pool.size > 0) {
+                            for (bet in pool) {
+                                val score = JHRPluginData.Scores[bet.id]!!
+                                val income = if (bet.number == winner) {
+                                    (bet.score * 1.5).toInt()
+                                } else {
+                                    -bet.score
+                                }
+                                JHRPluginData.Scores[bet.id] = score + income
+                                mb.add("\n")
+                                mb.add(At(bet.id))
+                                mb.add(PlainText("收益${income}"))
                             }
                         }
-
-                        subject.sendMessage("${winner}最终赢得了胜利，让我们为它鼓掌")
+                        subject.sendMessage(mb.asMessageChain())
                     }
                 }
                 msg == "关闭赛马" -> {
