@@ -17,6 +17,8 @@ import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.info
+import top.jie65535.jhr.game.Bet
+import top.jie65535.jhr.game.Horse
 import java.util.*
 import kotlin.random.Random
 
@@ -55,8 +57,6 @@ object JHorseRacing : KotlinPlugin(
 
     // region 赛马
 
-    private data class Bet(val id: Long, val number: Int, val score: Int)
-    private data class Horse(val type: Int, var position: Int = 0)
     private data class Rank(val horses: List<Horse>, val job: Job)
 
     /**
@@ -117,11 +117,7 @@ object JHorseRacing : KotlinPlugin(
                     JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
                 }
                 val number = (eventHorseIndex + 1).toString()
-                subject.sendMessage(
-                    eventMsg
-                        .replace("?", number)
-                        .replace("？", number)
-                )
+                subject.sendMessage(eventMsg.replace("?", number))
 
                 // 所有马前进
                 for ((i, horse) in rank.horses.withIndex()) {
@@ -199,7 +195,22 @@ object JHorseRacing : KotlinPlugin(
                         }
                     }
                 }
-                msg.startsWith("开始赛马") -> launch { startRank(subject) }
+                msg.startsWith("开始赛马") -> launch {
+                    startRank(subject)
+                }
+                msg.startsWith("结束赛马") -> {
+                    if (sender.permission.isOperator()) {
+                        val rank = ranks[subject.id]
+                        if (rank != null) {
+                            rank.job.cancel()
+                            ranks.remove(subject.id)
+                            pools.remove(subject.id)
+                            subject.sendMessage("已结束比赛")
+                        } else {
+                            subject.sendMessage("没有正在进行中的赛马")
+                        }
+                    }
+                }
                 msg == "关闭赛马" -> {
                     if (sender.permission.isOperator()) {
                         JHRPluginConfig.enabledGroups.remove(subject.id)
