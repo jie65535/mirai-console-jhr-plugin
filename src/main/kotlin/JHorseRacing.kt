@@ -132,7 +132,12 @@ object JHorseRacing : KotlinPlugin(
                                 eventHorse.position -= steps
                                 JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
                             }
-                            subject.sendMessage(eventMsg.replace("?", (eventHorseIndex + 1).toString()))
+                            val number = (eventHorseIndex + 1).toString()
+                            subject.sendMessage(
+                                eventMsg
+                                    .replace("?", number)
+                                    .replace("？", number)
+                            )
 
                             // 所有马前进
                             for ((i, horse) in rank.horses.withIndex()) {
