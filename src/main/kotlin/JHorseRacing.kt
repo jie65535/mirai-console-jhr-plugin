@@ -218,6 +218,26 @@ object JHorseRacing : KotlinPlugin(
                     pool.add(Bet(sender.id, no, coin))
                     subject.sendMessage("下注完成 加油啊${no}号马")
                 }
+                msg.startsWith("增加好事") -> {
+                    val event = msg.removePrefix("增加好事").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.goodEvents.indexOf(event) == -1) {
+                        JHRPluginConfig.goodEvents.add(event)
+                    }
+                    subject.sendMessage("OK")
+                }
+                msg.startsWith("增加坏事") -> {
+                    val event = msg.removePrefix("增加坏事").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.badEvents.indexOf(event) == -1) {
+                        JHRPluginConfig.badEvents.add(event)
+                    }
+                    subject.sendMessage("OK")
+                }
             }
         }
 
