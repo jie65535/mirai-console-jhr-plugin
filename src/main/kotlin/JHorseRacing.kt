@@ -66,14 +66,28 @@ object JHorseRacing : KotlinPlugin(
     private const val horseCount = 5 //多少个马
     private const val lapLength = 20 //赛道长度
     private val horseTypes = listOf(
-        "\uD83E\uDD84",
-        "\uD83D\uDC34",
-        "\uD83D\uDC14",
-        "\uD83D\uDEBD",
-        "\uD83D\uDC1C",
-        "\uD83D\uDC1C",
-        "\uD83D\uDC0E",
-        "\uD38D\uDFC7"
+        "\uD83E\uDD84",//独角兽也算马吧
+        "\uD83D\uDC34",//真马·头
+        "\uD83D\uDC14",//超级鸡马（
+        "\uD83D\uDEBD",//马桶也算马！
+        "\uD83D\uDC1C",//蚂蚁（读音带ma也算！
+        "\uD83D\uDC0E",//另一只真·马
+        "\uD83D\uDFC7",//赛马
+        "\uD83C\uDFC7\uD83C\uDFFB",//赛马
+        "\uD83C\uDFC7\uD83C\uDFFC",//赛马
+        "\uD83C\uDFC7\uD83C\uDFFD",//赛马
+        "\uD83C\uDFC7\uD83C\uDFFE",//赛马
+        "\uD83C\uDFC7\uD83C\uDFFF",//赛马
+        "\uD83C\uDDF2\uD83C\uDDFE", //马来西亚也算马吧，应该显示my
+        "\ufffd", //乱码2
+        "\u265e",//国际象棋马
+        "\u2658",//国际象棋马
+        "\ud83e\udd9b",//河马
+        "\ud83e\udd54",//马铃薯也算马！
+        "\ud83e\ude63",//象棋的马
+        "\ud83e\ude6a",//象棋的马（不知道能不能显示
+        "\ud83d\udc12",//弼马温(猴)也算马！
+
     )
     private val ranks = mutableMapOf<Long, Rank>()
     private fun drawHorse(horses: List<Horse>): String {
