@@ -291,6 +291,10 @@ object JHorseRacing : KotlinPlugin(
                     if (event.isBlank()) {
                         return@subscribeAlways
                     }
+                    if (event.indexOf('?') == -1) {
+                        subject.sendMessage("请使用'?'作为占位符")
+                        return@subscribeAlways
+                    }
                     if (JHRPluginConfig.goodEvents.indexOf(event) == -1) {
                         JHRPluginConfig.goodEvents.add(event)
                         logger.info("已增加好事件'$event'")
@@ -302,6 +306,10 @@ object JHorseRacing : KotlinPlugin(
                     if (event.isBlank()) {
                         return@subscribeAlways
                     }
+                    if (event.indexOf('?') == -1) {
+                        subject.sendMessage("请使用'?'作为占位符")
+                        return@subscribeAlways
+                    }
                     if (JHRPluginConfig.badEvents.indexOf(event) == -1) {
                         JHRPluginConfig.badEvents.add(event)
                         logger.info("已增加坏事件'$event'")
@@ -311,6 +319,10 @@ object JHorseRacing : KotlinPlugin(
                 msg.startsWith("增加胜利词") -> {
                     val event = msg.removePrefix("增加胜利词").trim()
                     if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (event.indexOf('?') == -1) {
+                        subject.sendMessage("请使用'?'作为占位符")
                         return@subscribeAlways
                     }
                     if (JHRPluginConfig.winnerMessage.indexOf(event) == -1) {
