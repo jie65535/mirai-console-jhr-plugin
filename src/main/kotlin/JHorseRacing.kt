@@ -331,6 +331,15 @@ object JHorseRacing : KotlinPlugin(
                     }
                     subject.sendMessage("OK")
                 }
+                msg == "好事列表" -> {
+                    subject.sendMessage(JHRPluginConfig.goodEvents.joinToString("\n"))
+                }
+                msg == "坏事列表" -> {
+                    subject.sendMessage(JHRPluginConfig.badEvents.joinToString("\n"))
+                }
+                msg == "胜利词列表" -> {
+                    subject.sendMessage(JHRPluginConfig.winnerMessage.joinToString("\n"))
+                }
             }
         }
 
