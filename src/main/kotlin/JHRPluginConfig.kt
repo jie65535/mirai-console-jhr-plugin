@@ -63,6 +63,17 @@ object JHRPluginConfig : AutoSavePluginConfig("HorseRacingPluginConfig") {
             )
     )
 
+    @ValueDescription("胜利消息 ?为占位符")
+    val winnerMessage: MutableList<String> by value(
+        mutableListOf(
+            "马?获得胜利，但在庆祝时被口水呛死了",
+            "马?获得了胜利，但发现奖牌是镀金的",
+            "马?到达终点,但是马?变得(",
+            "马?获得了胜利，跳起了失传已久的hop",
+            "马?获得了胜利，但随后，梦醒了",
+        )
+    )
+
     /**
      * 自动开始时间(s)
      */

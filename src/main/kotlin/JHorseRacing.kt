@@ -15,7 +15,6 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
-import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
 import top.jie65535.jhr.game.Horse
@@ -144,11 +143,14 @@ object JHorseRacing : KotlinPlugin(
                 delay(Random.nextLong(1000) + 3000)
             }
             val mb = MessageChainBuilder()
-            if (winners.size == 1) {
-                mb.add("${winners[0]} 最终赢得了胜利，让我们为它鼓掌")
-            } else {
-                mb.add("${winners.joinToString()} 一起赢得了胜利，让我们为它们鼓掌")
+            for (winner in winners) {
+                mb.add(JHRPluginConfig.winnerMessage[Random.nextInt(JHRPluginConfig.winnerMessage.size)].replace(",", winner.toString()))
             }
+//            if (winners.size == 1) {
+//                mb.add("${winners[0]} 最终赢得了胜利，让我们为它鼓掌")
+//            } else {
+//                mb.add("${winners.joinToString()} 一起赢得了胜利，让我们为它们鼓掌")
+//            }
             ranks.remove(subject.id)
             val pool = pools.remove(subject.id)
             if (pool != null && pool.size > 0) {
@@ -303,6 +305,17 @@ object JHorseRacing : KotlinPlugin(
                     if (JHRPluginConfig.badEvents.indexOf(event) == -1) {
                         JHRPluginConfig.badEvents.add(event)
                         logger.info("已增加坏事件'$event'")
+                    }
+                    subject.sendMessage("OK")
+                }
+                msg.startsWith("增加胜利词") -> {
+                    val event = msg.removePrefix("增加胜利词").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.winnerMessage.indexOf(event) == -1) {
+                        JHRPluginConfig.winnerMessage.add(event)
+                        logger.info("已增加胜利词'$event'")
                     }
                     subject.sendMessage("OK")
                 }
