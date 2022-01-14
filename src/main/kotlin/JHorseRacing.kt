@@ -87,8 +87,8 @@ object JHorseRacing : KotlinPlugin(
         "\ud83e\ude63",//象棋的马
         "\ud83e\ude6a",//象棋的马（不知道能不能显示
         "\ud83d\udc12",//弼马温(猴)也算马！
-
     )
+    private const val horseLogo = "\uD83C\uDFC7\uD83C\uDFFB"
     private val ranks = mutableMapOf<Long, Rank>()
     private fun drawHorse(horses: List<Horse>): String {
         val sb = StringBuilder()
@@ -106,12 +106,12 @@ object JHorseRacing : KotlinPlugin(
     private suspend fun startRank(subject: Group) {
         val t = pools[subject.id] ?: return
         if (t.size == 0) {
-            subject.sendMessage("无人下注，无法开始哦")
+            subject.sendMessage("无人下分，无法开始哦")
             return
         }
         if (ranks[subject.id] != null) return
         logger.info("开始赛马")
-        subject.sendMessage("赛马开始辣，走过路过不要错过")
+        subject.sendMessage("$horseLogo 开始辣，走过路过不要错过")
         val rank = Rank(List(horseCount) { Horse(Random.nextInt(horseTypes.size)) }, Job())
         ranks[subject.id] = rank
         subject.sendMessage(drawHorse(rank.horses))
@@ -162,7 +162,10 @@ object JHorseRacing : KotlinPlugin(
                     JHRPluginData.Scores[bet.id] = score + income
                     mb.add("\n")
                     mb.add(At(bet.id))
-                    mb.add(PlainText(" 收益 $income"))
+                    if (income > 0)
+                        mb.add(" +$income")
+                    else
+                        mb.add(" $income")
                 }
             }
             subject.sendMessage(mb.asMessageChain())
@@ -186,7 +189,7 @@ object JHorseRacing : KotlinPlugin(
             if (JHRPluginConfig.enabledGroups.indexOf(group.id) == -1) {
                 if (msg == "开启赛马" && sender.permission.isOperator()) {
                     JHRPluginConfig.enabledGroups.add(group.id)
-                    subject.sendMessage("已开启赛马")
+                    subject.sendMessage("已开启$horseLogo")
                     logger.info("群 ${subject.id} 已启用赛马")
                 }
                 return@subscribeAlways
@@ -200,7 +203,7 @@ object JHorseRacing : KotlinPlugin(
                         logger.info("群 ${subject.id} 已开盘")
                         val pool = mutableListOf<Bet>()
                         pools[subject.id] = pool
-                        subject.sendMessage("赛马比赛开盘，有钱交钱妹钱交人。\n${JHRPluginConfig.autoStartTime}秒后将自动开始")
+                        subject.sendMessage("${horseLogo}来咯，有钱交钱妹钱交人。\n${JHRPluginConfig.autoStartTime}秒后将自动开始")
                         launch {
                             delay(JHRPluginConfig.autoStartTime * 1000L)
                             if (pools[subject.id] == pool) {
@@ -209,10 +212,10 @@ object JHorseRacing : KotlinPlugin(
                         }
                     }
                 }
-                msg.startsWith("开始赛马") -> launch {
+                msg.startsWith("开始") -> launch {
                     startRank(subject)
                 }
-                msg.startsWith("结束赛马") -> {
+                msg.startsWith("结束") -> {
                     if (sender.permission.isOperator()) {
                         val rank = ranks[subject.id]
                         if (rank != null) {
@@ -228,7 +231,7 @@ object JHorseRacing : KotlinPlugin(
                 msg == "关闭赛马" -> {
                     if (sender.permission.isOperator()) {
                         JHRPluginConfig.enabledGroups.remove(subject.id)
-                        subject.sendMessage("已关闭赛马")
+                        subject.sendMessage("已关闭$horseLogo")
                         logger.info("群 ${subject.id} 已关闭赛马")
                     }
                 }
@@ -241,23 +244,23 @@ object JHorseRacing : KotlinPlugin(
                         val reward = signReward
                         if (score != null) {
                             JHRPluginData.Scores[sender.id] = score + reward
-                            subject.sendMessage("硬币+${reward}，现有${score + reward}硬币")
+                            subject.sendMessage("积分+${reward}，现有${score + reward}积分")
                         } else {
                             JHRPluginData.Scores[sender.id] = reward
-                            subject.sendMessage("硬币+${reward}")
+                            subject.sendMessage("积分+${reward}")
                         }
                     }
                 }
-                msg.startsWith("押马") -> {
+                msg.startsWith("马") -> {
                     // 如果比赛进行中则不允许下注
                     if (ranks[subject.id] != null) return@subscribeAlways
                     val pool = pools[subject.id] ?: return@subscribeAlways
                     if (pool.any { it.id == sender.id }) {
-                        subject.sendMessage("你已经下过注辣")
+                        subject.sendMessage("你已经下过分辣")
                         return@subscribeAlways
                     }
 
-                    val m = msg.removePrefix("押马")
+                    val m = msg.removePrefix("马")
                     val p = m.split(' ')
                     if (p.size != 2) {
                         return@subscribeAlways
@@ -269,12 +272,12 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
                     if (coin == null || coin < 0) {
-                        subject.sendMessage("胡乱下注不可取")
+                        subject.sendMessage("胡乱下分不可取")
                         return@subscribeAlways
                     }
                     val score = JHRPluginData.Scores[sender.id]
                     if (score == null || score - coin < 0) {
-                        subject.sendMessage("没那么多可以下注的币惹")
+                        subject.sendMessage("没那么多可以下注的分惹")
                         return@subscribeAlways
                     }
 
@@ -314,7 +317,7 @@ object JHorseRacing : KotlinPlugin(
                 val ret = MessageChainBuilder()
                 ret.add(message.quote())
                 if (score != null) {
-                    ret.add("有${score}块钱")
+                    ret.add("有${score}积分")
                     if (!checkSign(sender.id)) {
                         ret.add("，还没有签到哦")
                     }
