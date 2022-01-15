@@ -341,8 +341,8 @@ object JHorseRacing : KotlinPlugin(
                         subject.sendMessage("请使用'?'作为占位符")
                         return@subscribeAlways
                     }
-                    if (JHRPluginConfig.winnerMessage.indexOf(event) == -1) {
-                        JHRPluginConfig.winnerMessage.add(event)
+                    if (JHRPluginConfig.betMessage.indexOf(event) == -1) {
+                        JHRPluginConfig.betMessage.add(event)
                         logger.info("已增加下注词'$event'")
                     }
                     subject.sendMessage("OK")
