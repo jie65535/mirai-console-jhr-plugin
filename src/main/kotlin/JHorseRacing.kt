@@ -332,6 +332,42 @@ object JHorseRacing : KotlinPlugin(
                     }
                     subject.sendMessage("OK")
                 }
+                msg.startsWith("删除好事") -> {
+                    val event = msg.removePrefix("删除好事").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.goodEvents.remove(event)) {
+                        logger.info("已删除好事件'$event'")
+                        subject.sendMessage("OK")
+                    } else {
+                        subject.sendMessage("没有这一项")
+                    }
+                }
+                msg.startsWith("删除坏事") -> {
+                    val event = msg.removePrefix("删除坏事").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.badEvents.remove(event)) {
+                        logger.info("已删除好事件'$event'")
+                        subject.sendMessage("OK")
+                    } else {
+                        subject.sendMessage("没有这一项")
+                    }
+                }
+                msg.startsWith("删除胜利词") -> {
+                    val event = msg.removePrefix("删除胜利词").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.winnerMessage.remove(event)) {
+                        logger.info("已删除好事件'$event'")
+                        subject.sendMessage("OK")
+                    } else {
+                        subject.sendMessage("没有这一项")
+                    }
+                }
                 msg == "好事列表" -> {
                     subject.sendMessage(JHRPluginConfig.goodEvents.joinToString("\n"))
                 }
