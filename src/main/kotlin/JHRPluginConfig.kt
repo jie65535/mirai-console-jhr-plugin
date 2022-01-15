@@ -74,6 +74,13 @@ object JHRPluginConfig : AutoSavePluginConfig("HorseRacingPluginConfig") {
         )
     )
 
+    @ValueDescription("下注消息 ?为占位符")
+    val betMessage: MutableList<String> by value(
+        mutableListOf(
+            "就决定是你了，加油啊?号马"
+        )
+    )
+
     /**
      * 自动开始时间(s)
      */

@@ -285,7 +285,7 @@ object JHorseRacing : KotlinPlugin(
                     }
 
                     pool.add(Bet(sender.id, no, coin))
-                    subject.sendMessage("下注完成 加油啊${no}号马")
+                    subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
                 }
                 msg.startsWith("增加好事") -> {
                     val event = msg.removePrefix("增加好事").trim()
@@ -332,6 +332,21 @@ object JHorseRacing : KotlinPlugin(
                     }
                     subject.sendMessage("OK")
                 }
+                msg.startsWith("增加下注词") -> {
+                    val event = msg.removePrefix("增加下注词").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (event.indexOf('?') == -1) {
+                        subject.sendMessage("请使用'?'作为占位符")
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.winnerMessage.indexOf(event) == -1) {
+                        JHRPluginConfig.winnerMessage.add(event)
+                        logger.info("已增加下注词'$event'")
+                    }
+                    subject.sendMessage("OK")
+                }
                 msg.startsWith("删除好事") -> {
                     val event = msg.removePrefix("删除好事").trim()
                     if (event.isBlank()) {
@@ -350,7 +365,7 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
                     if (JHRPluginConfig.badEvents.remove(event)) {
-                        logger.info("已删除好事件'$event'")
+                        logger.info("已删除坏事件'$event'")
                         subject.sendMessage("OK")
                     } else {
                         subject.sendMessage("没有这一项")
@@ -362,7 +377,19 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
                     if (JHRPluginConfig.winnerMessage.remove(event)) {
-                        logger.info("已删除好事件'$event'")
+                        logger.info("已删除胜利词'$event'")
+                        subject.sendMessage("OK")
+                    } else {
+                        subject.sendMessage("没有这一项")
+                    }
+                }
+                msg.startsWith("删除下注词") -> {
+                    val event = msg.removePrefix("删除下注词").trim()
+                    if (event.isBlank()) {
+                        return@subscribeAlways
+                    }
+                    if (JHRPluginConfig.betMessage.remove(event)) {
+                        logger.info("已删除下注词'$event'")
                         subject.sendMessage("OK")
                     } else {
                         subject.sendMessage("没有这一项")
@@ -376,6 +403,9 @@ object JHorseRacing : KotlinPlugin(
                 }
                 msg == "胜利词列表" -> {
                     subject.sendMessage(JHRPluginConfig.winnerMessage.joinToString("\n"))
+                }
+                msg == "下注词列表" -> {
+                    subject.sendMessage(JHRPluginConfig.betMessage.joinToString("\n"))
                 }
             }
         }
