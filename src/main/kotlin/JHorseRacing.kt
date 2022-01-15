@@ -144,7 +144,8 @@ object JHorseRacing : KotlinPlugin(
             }
             val mb = MessageChainBuilder()
             for (winner in winners) {
-                mb.add(JHRPluginConfig.winnerMessage[Random.nextInt(JHRPluginConfig.winnerMessage.size)].replace(",", winner.toString()))
+                mb.add(JHRPluginConfig.winnerMessage[Random.nextInt(JHRPluginConfig.winnerMessage.size)].replace("?", winner.toString()))
+                mb.add("\n")
             }
 //            if (winners.size == 1) {
 //                mb.add("${winners[0]} 最终赢得了胜利，让我们为它鼓掌")
