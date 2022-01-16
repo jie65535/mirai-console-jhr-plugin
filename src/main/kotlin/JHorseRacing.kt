@@ -18,6 +18,7 @@ import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
 import top.jie65535.jhr.game.Horse
+import top.jie65535.jhr.game.PlayerStatistics
 import java.util.*
 import kotlin.random.Random
 
@@ -102,6 +103,20 @@ object JHorseRacing : KotlinPlugin(
         }
         return sb.toString()
     }
+
+    private fun getPlayerStat(id: Long): PlayerStatistics {
+        var stat = JHRPluginData.playerStat[id]
+        if (stat == null) {
+            stat = PlayerStatistics()
+            JHRPluginData.playerStat[id] = stat
+        }
+        return stat
+    }
+
+    private fun addContribution(id: Long) {
+        getPlayerStat(id).contribution += 1
+    }
+
     private suspend fun startRank(subject: Group) {
         val t = pools[subject.id] ?: return
         if (t.size == 0) {
@@ -158,6 +173,7 @@ object JHorseRacing : KotlinPlugin(
                 for (bet in pool) {
                     val score = JHRPluginData.Scores[bet.id]!!
                     val income = if (winners.indexOf(bet.number) != -1) {
+                        getPlayerStat(bet.id).winCount += 1
                         (bet.score * 1.5).toInt()
                     } else {
                         -bet.score
@@ -243,6 +259,7 @@ object JHorseRacing : KotlinPlugin(
                         subject.sendMessage("一天只能签到一次噢")
                     } else {
                         signUpSheet.add(sender.id)
+                        getPlayerStat(sender.id).signCount += 1
                         val score = JHRPluginData.Scores[sender.id]
                         val reward = signReward
                         if (score != null) {
@@ -284,6 +301,7 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
 
+                    getPlayerStat(sender.id).betCount += 1
                     pool.add(Bet(sender.id, no, coin))
                     subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
                 }
@@ -298,6 +316,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.goodEvents.indexOf(event) == -1) {
                         JHRPluginConfig.goodEvents.add(event)
+                        addContribution(sender.id)
                         logger.info("已增加好事件'$event'")
                     }
                     subject.sendMessage("OK")
@@ -313,6 +332,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.badEvents.indexOf(event) == -1) {
                         JHRPluginConfig.badEvents.add(event)
+                        addContribution(sender.id)
                         logger.info("已增加坏事件'$event'")
                     }
                     subject.sendMessage("OK")
@@ -328,6 +348,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.winnerMessage.indexOf(event) == -1) {
                         JHRPluginConfig.winnerMessage.add(event)
+                        addContribution(sender.id)
                         logger.info("已增加胜利词'$event'")
                     }
                     subject.sendMessage("OK")
@@ -343,6 +364,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                     if (JHRPluginConfig.betMessage.indexOf(event) == -1) {
                         JHRPluginConfig.betMessage.add(event)
+                        addContribution(sender.id)
                         logger.info("已增加下注词'$event'")
                     }
                     subject.sendMessage("OK")
@@ -406,6 +428,25 @@ object JHorseRacing : KotlinPlugin(
                 }
                 msg == "下注词列表" -> {
                     subject.sendMessage(JHRPluginConfig.betMessage.joinToString("\n"))
+                }
+                msg == "排名" || msg == "积分榜" -> {
+                    val msgB = MessageChainBuilder(11)
+                    msgB.append("积分榜")
+                    JHRPluginData.Scores.entries.sortedBy { it.value }.take(10).onEach {
+                        msgB.append(At(it.key)).append(" ${it.value}")
+                    }
+                    subject.sendMessage(msgB.asMessageChain())
+                }
+                msg == "统计" -> {
+                    val stat = getPlayerStat(sender.id)
+                    val ret = MessageChainBuilder()
+                    ret.append(message.quote())
+                        .append("下注次数：${stat.betCount}\n")
+                        .append("获胜次数：${stat.winCount}\n")
+                        .append("贡献次数：${stat.contribution}\n")
+                        .append("签到次数：${stat.signCount}\n")
+                        .append("ヾ(◍°∇°◍)ﾉﾞ继续加油吧！")
+                    subject.sendMessage(ret.asMessageChain())
                 }
             }
         }
