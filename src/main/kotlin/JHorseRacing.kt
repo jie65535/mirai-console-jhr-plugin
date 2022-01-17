@@ -136,10 +136,8 @@ object JHorseRacing : KotlinPlugin(
                 delay(Random.nextLong(5000, 7000))
 
                 // 所有马前进
-                for ((i, horse) in rank.horses.withIndex()) {
-                    if (++horse.position >= lapLength) {
-                        winners.add(i + 1)
-                    }
+                for (horse in rank.horses) {
+                    ++horse.position
                 }
 
                 // 比赛事件触发
@@ -152,6 +150,14 @@ object JHorseRacing : KotlinPlugin(
                 } else {
                     eventHorse.position -= steps
                     JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
+                }
+
+
+                // 计算获胜者
+                for ((i, horse) in rank.horses.withIndex()) {
+                    if (horse.position >= lapLength) {
+                        winners.add(i + 1)
+                    }
                 }
 
                 val number = (eventHorseIndex + 1).toString()
