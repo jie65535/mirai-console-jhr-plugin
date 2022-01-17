@@ -19,6 +19,7 @@ import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
 import top.jie65535.jhr.game.Horse
 import top.jie65535.jhr.game.PlayerStatistics
+import java.lang.Integer.max
 import java.util.*
 import kotlin.random.Random
 
@@ -97,7 +98,7 @@ object JHorseRacing : KotlinPlugin(
             for (j in horse.position until lapLength)
                 sb.append("Ξ")
             sb.append(horseTypes[horse.type])
-            for (j in 1 until horse.position)
+            for (j in 0 until max(lapLength, horse.position))
                 sb.append("Ξ")
             sb.appendLine()
         }
@@ -132,7 +133,15 @@ object JHorseRacing : KotlinPlugin(
         launch(rank.job) {
             val winners = mutableListOf<Int>()
             while (winners.size == 0) {
-                delay(Random.nextLong(1000) + 2000)
+                delay(Random.nextLong(5000, 7000))
+
+                // 所有马前进
+                for ((i, horse) in rank.horses.withIndex()) {
+                    if (++horse.position >= lapLength) {
+                        winners.add(i + 1)
+                    }
+                }
+
                 // 比赛事件触发
                 val steps = (1..3).random() //事件触发前进或后退随机大小
                 val eventHorseIndex = Random.nextInt(rank.horses.size)
@@ -144,19 +153,13 @@ object JHorseRacing : KotlinPlugin(
                     eventHorse.position -= steps
                     JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
                 }
+
                 val number = (eventHorseIndex + 1).toString()
                 subject.sendMessage(eventMsg.replace("?", number))
-
-                // 所有马前进
-                for ((i, horse) in rank.horses.withIndex()) {
-                    if (++horse.position >= lapLength) {
-                        winners.add(i + 1)
-                    }
-                }
+                delay(Random.nextLong(100, 200))
                 subject.sendMessage(drawHorse(rank.horses))
-
-                delay(Random.nextLong(1000) + 3000)
             }
+            delay(Random.nextLong(100, 200))
             val mb = MessageChainBuilder()
             for (winner in winners) {
                 mb.add(JHRPluginConfig.winnerMessage[Random.nextInt(JHRPluginConfig.winnerMessage.size)].replace("?", winner.toString()))
