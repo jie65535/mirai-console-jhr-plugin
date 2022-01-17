@@ -446,7 +446,7 @@ object JHorseRacing : KotlinPlugin(
                         .sortedByDescending { it.value }
                         .take(10)
                         .onEach {
-                            msgB.append("${subject[it.key]!!.nameCardOrNick} | ${it.value} |\n")
+                            msgB.append("| ${it.value} | ${subject[it.key]!!.nameCardOrNick}\n")
                         }
                     subject.sendMessage(msgB.asMessageChain())
                 }
