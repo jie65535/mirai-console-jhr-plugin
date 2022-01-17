@@ -434,10 +434,12 @@ object JHorseRacing : KotlinPlugin(
                 }
                 msg == "排名" || msg == "积分榜" -> {
                     val msgB = MessageChainBuilder(11)
-                    msgB.append("积分榜")
-                    JHRPluginData.Scores.entries.sortedBy { it.value }.take(10).onEach {
-                        msgB.append(At(it.key)).append(" ${it.value}")
-                    }
+                    msgB.append("积分榜\n")
+                    JHRPluginData.Scores.entries.sortedByDescending { it.value }
+                        .take(10)
+                        .onEach {
+                            msgB.append(At(it.key)).append(" ${it.value}\n")
+                        }
                     subject.sendMessage(msgB.asMessageChain())
                 }
                 msg == "统计" -> {
