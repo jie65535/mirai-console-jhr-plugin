@@ -9,6 +9,7 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.isOperator
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
@@ -445,7 +446,7 @@ object JHorseRacing : KotlinPlugin(
                         .sortedByDescending { it.value }
                         .take(10)
                         .onEach {
-                            msgB.append("${subject[it.key]!!.nameCard} | ${it.value} |\n")
+                            msgB.append("${subject[it.key]!!.nameCardOrNick} | ${it.value} |\n")
                         }
                     subject.sendMessage(msgB.asMessageChain())
                 }
