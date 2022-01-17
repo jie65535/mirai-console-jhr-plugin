@@ -19,7 +19,7 @@ import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
 import top.jie65535.jhr.game.Horse
 import top.jie65535.jhr.game.PlayerStatistics
-import java.lang.Integer.max
+import java.lang.Integer.min
 import java.util.*
 import kotlin.random.Random
 
@@ -98,7 +98,7 @@ object JHorseRacing : KotlinPlugin(
             for (j in horse.position until lapLength)
                 sb.append("Ξ")
             sb.append(horseTypes[horse.type])
-            for (j in 0 until max(lapLength, horse.position))
+            for (j in 0 until min(lapLength, horse.position))
                 sb.append("Ξ")
             sb.appendLine()
         }
@@ -435,10 +435,11 @@ object JHorseRacing : KotlinPlugin(
                 msg == "排名" || msg == "积分榜" -> {
                     val msgB = MessageChainBuilder(11)
                     msgB.append("积分榜\n")
-                    JHRPluginData.Scores.entries.sortedByDescending { it.value }
+                    JHRPluginData.Scores.entries.filter { subject.contains(it.key) }
+                        .sortedByDescending { it.value }
                         .take(10)
                         .onEach {
-                            msgB.append(At(it.key)).append(" ${it.value}\n")
+                            msgB.append("${subject[it.key]!!.nameCard} | ${it.value} |\n")
                         }
                     subject.sendMessage(msgB.asMessageChain())
                 }
