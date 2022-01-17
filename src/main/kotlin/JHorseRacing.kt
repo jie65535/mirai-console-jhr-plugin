@@ -182,8 +182,10 @@ object JHorseRacing : KotlinPlugin(
             if (pool != null && pool.size > 0) {
                 for (bet in pool) {
                     val score = JHRPluginData.Scores[bet.id]!!
+                    val stat = getPlayerStat(bet.id)
+                    stat.totalBetScore += bet.score
                     val income = if (winners.indexOf(bet.number) != -1) {
-                        getPlayerStat(bet.id).winCount += 1
+                        stat.winCount += 1
                         (bet.score * 1.5).toInt()
                     } else {
                         -bet.score
@@ -454,11 +456,8 @@ object JHorseRacing : KotlinPlugin(
                     val stat = getPlayerStat(sender.id)
                     val ret = MessageChainBuilder()
                     ret.append(message.quote())
-                        .append("下注次数：${stat.betCount}\n")
-                        .append("获胜次数：${stat.winCount}\n")
-                        .append("贡献次数：${stat.contribution}\n")
-                        .append("签到次数：${stat.signCount}\n")
-                        .append("ヾ(◍°∇°◍)ﾉﾞ继续加油吧！")
+                        .append(getPlayerStat(sender.id).toString())
+                        .append("\nヾ(◍°∇°◍)ﾉﾞ继续加油吧！")
                     subject.sendMessage(ret.asMessageChain())
                 }
             }
