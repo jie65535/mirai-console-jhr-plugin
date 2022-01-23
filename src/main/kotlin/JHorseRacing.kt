@@ -36,16 +36,14 @@ object JHorseRacing : KotlinPlugin(
     }
 ) {
     // region 签到
-    private var date = Calendar.getInstance().get(Calendar.DATE)
-    private val mSignUpSheet = mutableListOf<Long>()
     private val signUpSheet: MutableList<Long>
         get() {
             val now = Calendar.getInstance().get(Calendar.DATE)
-            if (date != now) {
-                date = now
-                mSignUpSheet.clear()
+            if (JHRPluginData.signDate != now) {
+                JHRPluginData.signDate = now
+                JHRPluginData.signUpSheet.clear()
             }
-            return mSignUpSheet
+            return JHRPluginData.signUpSheet
         }
 
     private fun checkSign(id: Long): Boolean {
@@ -457,7 +455,6 @@ object JHorseRacing : KotlinPlugin(
                     subject.sendMessage(msgB.asMessageChain())
                 }
                 msg == "统计" -> {
-                    val stat = getPlayerStat(sender.id)
                     val ret = MessageChainBuilder()
                     ret.append(message.quote())
                         .append(getPlayerStat(sender.id).toString())
@@ -465,12 +462,12 @@ object JHorseRacing : KotlinPlugin(
                     subject.sendMessage(ret.asMessageChain())
                 }
                 msg == "胜率" -> {
-                    val ret = MessageChainBuilder()
+                    logger.info("查询胜率")
+                    val ret = StringBuilder()
                     for (i in 0 until horseCount) {
                         ret.append("${horseLogo}${i+1} ${JHRPluginData.horseWinCount[i]}/${JHRPluginData.totalRankCount}\n")
                     }
-                    if (ret.isNotEmpty())
-                        subject.sendMessage(ret.asMessageChain())
+                    subject.sendMessage(ret.toString())
                 }
             }
         }

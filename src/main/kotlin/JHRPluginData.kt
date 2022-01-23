@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import top.jie65535.jhr.game.PlayerStatistics
+import java.util.*
 
 object JHRPluginData : AutoSavePluginData("HorseRacingPluginData") {
 
@@ -18,4 +19,10 @@ object JHRPluginData : AutoSavePluginData("HorseRacingPluginData") {
 
     @ValueDescription("赛马获胜计数")
     val horseWinCount: MutableList<Int> by value()
+
+    @ValueDescription("签到表日期")
+    var signDate by value(Calendar.getInstance().get(Calendar.DATE))
+
+    @ValueDescription("当日签到表")
+    var signUpSheet by value(mutableListOf<Long>())
 }
