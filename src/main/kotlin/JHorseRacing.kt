@@ -159,14 +159,13 @@ object JHorseRacing : KotlinPlugin(
             }
             val mb = MessageChainBuilder()
             for (winner in winners) {
+                // 增加该赛马胜场
+                JHRPluginData.horseWinCount[winner-1] += 1
                 mb.add(JHRPluginConfig.winnerMessage[Random.nextInt(JHRPluginConfig.winnerMessage.size)].replace("?", winner.toString()))
                 mb.add("\n")
             }
-//            if (winners.size == 1) {
-//                mb.add("${winners[0]} 最终赢得了胜利，让我们为它鼓掌")
-//            } else {
-//                mb.add("${winners.joinToString()} 一起赢得了胜利，让我们为它们鼓掌")
-//            }
+            // 增加总赛马场次
+            JHRPluginData.totalRankCount += 1
             ranks.remove(subject.id)
             val pool = pools.remove(subject.id)
             if (pool != null && pool.size > 0) {
@@ -199,6 +198,11 @@ object JHorseRacing : KotlinPlugin(
         JHRPluginConfig.reload()
         JHRPluginData.reload()
         JHRCommand.register()
+
+        // 初始化赛马胜场计数器
+        while (JHRPluginData.horseWinCount.size < horseCount) {
+            JHRPluginData.horseWinCount.add(0)
+        }
 
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent> {
@@ -447,6 +451,14 @@ object JHorseRacing : KotlinPlugin(
                         .append("签到次数：${stat.signCount}\n")
                         .append("ヾ(◍°∇°◍)ﾉﾞ继续加油吧！")
                     subject.sendMessage(ret.asMessageChain())
+                }
+                msg == "胜率" -> {
+                    val ret = MessageChainBuilder()
+                    for (i in 0 until horseCount) {
+                        ret.append("${horseLogo}${i+1} ${JHRPluginData.horseWinCount[i]}/${JHRPluginData.totalRankCount}\n")
+                    }
+                    if (ret.isNotEmpty())
+                        subject.sendMessage(ret.asMessageChain())
                 }
             }
         }
