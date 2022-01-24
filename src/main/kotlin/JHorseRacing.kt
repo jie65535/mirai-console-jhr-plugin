@@ -141,8 +141,11 @@ object JHorseRacing : KotlinPlugin(
 
                 // 比赛事件触发
                 val steps = (1..3).random() //事件触发前进或后退随机大小
+                // 事件赛马下标
                 val eventHorseIndex = Random.nextInt(rank.horses.size)
+                // 事件赛马
                 val eventHorse = rank.horses[eventHorseIndex]
+                // 触发事件
                 val eventMsg = if (Random.nextInt(77) > 32) {
                     eventHorse.position += steps
                     JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
@@ -159,9 +162,11 @@ object JHorseRacing : KotlinPlugin(
                     }
                 }
 
+                // 发送事件消息
                 val number = (eventHorseIndex + 1).toString()
                 subject.sendMessage(eventMsg.replace("?", number))
                 delay(Random.nextLong(100, 200))
+                // 渲染赛马
                 subject.sendMessage(drawHorse(rank.horses))
             }
             delay(Random.nextLong(100, 200))
@@ -174,28 +179,38 @@ object JHorseRacing : KotlinPlugin(
             }
             // 增加总赛马场次
             JHRPluginData.totalRankCount += 1
+            // 移除比赛
             ranks.remove(subject.id)
+            // 奖池结算
             val pool = pools.remove(subject.id)
             if (pool != null && pool.size > 0) {
                 for (bet in pool) {
                     val score = JHRPluginData.Scores[bet.id]!!
                     val stat = getPlayerStat(bet.id)
+                    // 下注计数
                     stat.betCount += 1
+                    // 下注积分累积
                     stat.totalBetScore += bet.score
                     val income = if (winners.indexOf(bet.number) != -1) {
+                        // 胜场计数累积
                         stat.winCount += 1
+                        // 收益积分
                         (bet.score * 1.5).toInt()
                     } else {
+                        // 亏损积分
                         -bet.score
                     }
+                    // 计算积分
                     JHRPluginData.Scores[bet.id] = score + income
                     mb.add("\n")
                     mb.add(At(bet.id))
                     if (income > 0) {
                         mb.add(" +$income")
+                        // 累计收益
                         stat.totalWinScore += income
                     } else {
                         mb.add(" $income")
+                        // 累计亏损
                         stat.totalLossScore += income
                     }
                 }
