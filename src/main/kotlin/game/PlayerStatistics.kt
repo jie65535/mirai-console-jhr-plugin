@@ -37,9 +37,14 @@ class PlayerStatistics {
     var totalWinScore = 0
 
     /**
-     * 失败积分累计
+     * 失败积分累计 （负数）
      */
     var totalLossScore = 0
+
+    /**
+     * 总利润
+     */
+    val totalProfit get() = totalWinScore + totalLossScore
 
     override fun toString(): String {
         return "下注次数：${betCount}\n" +

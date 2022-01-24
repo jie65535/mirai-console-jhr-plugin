@@ -496,6 +496,19 @@ object JHorseRacing : KotlinPlugin(
                         }
                     subject.sendMessage(msgB.asMessageChain())
                 }
+                msg == "利润榜" -> {
+                    val msgB = MessageChainBuilder(11)
+                    msgB.append("利润榜\n")
+                    JHRPluginData.playerStat.entries.filter {
+                        subject.contains(it.key)
+                            && it.value.totalProfit != 0
+                    }.sortedByDescending { it.value.totalProfit }
+                        .take(10)
+                        .onEach {
+                            msgB.append("| ${it.value.totalProfit} | ${subject[it.key]!!.nameCardOrNick}\n")
+                        }
+                    subject.sendMessage(msgB.asMessageChain())
+                }
                 msg == "统计" -> {
                     val ret = MessageChainBuilder()
                     ret.append(message.quote())
