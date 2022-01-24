@@ -180,6 +180,7 @@ object JHorseRacing : KotlinPlugin(
                 for (bet in pool) {
                     val score = JHRPluginData.Scores[bet.id]!!
                     val stat = getPlayerStat(bet.id)
+                    stat.betCount += 1
                     stat.totalBetScore += bet.score
                     val income = if (winners.indexOf(bet.number) != -1) {
                         stat.winCount += 1
@@ -190,10 +191,13 @@ object JHorseRacing : KotlinPlugin(
                     JHRPluginData.Scores[bet.id] = score + income
                     mb.add("\n")
                     mb.add(At(bet.id))
-                    if (income > 0)
+                    if (income > 0) {
                         mb.add(" +$income")
-                    else
+                        stat.totalWinScore += income
+                    } else {
                         mb.add(" $income")
+                        stat.totalLossScore += income
+                    }
                 }
             }
             subject.sendMessage(mb.asMessageChain())
@@ -315,7 +319,8 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
 
-                    getPlayerStat(sender.id).betCount += 1
+                    // 结算时再计数
+                    // getPlayerStat(sender.id).betCount += 1
                     pool.add(Bet(sender.id, no, coin))
                     subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
                 }
@@ -451,6 +456,28 @@ object JHorseRacing : KotlinPlugin(
                         .take(10)
                         .onEach {
                             msgB.append("| ${it.value} | ${subject[it.key]!!.nameCardOrNick}\n")
+                        }
+                    subject.sendMessage(msgB.asMessageChain())
+                }
+                msg == "白给榜" -> {
+                    val msgB = MessageChainBuilder(11)
+                    msgB.append("白给榜\n")
+                    JHRPluginData.playerStat.entries.filter { subject.contains(it.key) }
+                        .sortedByDescending { it.value.totalLossScore }
+                        .take(10)
+                        .onEach {
+                            msgB.append("| ${it.value.totalLossScore} | ${subject[it.key]!!.nameCardOrNick}\n")
+                        }
+                    subject.sendMessage(msgB.asMessageChain())
+                }
+                msg == "收益榜" -> {
+                    val msgB = MessageChainBuilder(11)
+                    msgB.append("收益榜\n")
+                    JHRPluginData.playerStat.entries.filter { subject.contains(it.key) }
+                        .sortedByDescending { it.value.totalWinScore }
+                        .take(10)
+                        .onEach {
+                            msgB.append("| ${it.value.totalWinScore} | ${subject[it.key]!!.nameCardOrNick}\n")
                         }
                     subject.sendMessage(msgB.asMessageChain())
                 }
