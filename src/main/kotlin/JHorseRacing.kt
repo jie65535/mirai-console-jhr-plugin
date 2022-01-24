@@ -216,6 +216,8 @@ object JHorseRacing : KotlinPlugin(
                 }
             }
             subject.sendMessage(mb.asMessageChain())
+            // 手动保存数据
+            JHRPluginData.save()
             logger.info("赛马结束")
         }
     }
