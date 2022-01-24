@@ -478,7 +478,7 @@ object JHorseRacing : KotlinPlugin(
                     val msgB = MessageChainBuilder(11)
                     msgB.append("白给榜\n")
                     JHRPluginData.playerStat.entries.filter { subject.contains(it.key) }
-                        .sortedByDescending { it.value.totalLossScore }
+                        .sortedBy { it.value.totalLossScore }
                         .take(10)
                         .onEach {
                             msgB.append("| ${it.value.totalLossScore} | ${subject[it.key]!!.nameCardOrNick}\n")
