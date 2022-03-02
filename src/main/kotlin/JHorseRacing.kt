@@ -194,8 +194,8 @@ object JHorseRacing : KotlinPlugin(
                     val income = if (winners.indexOf(bet.number) != -1) {
                         // 胜场计数累积
                         stat.winCount += 1
-                        // 收益积分
-                        (bet.score * 1.5).toInt()
+                        // 收益积分  若梭哈，则奖励翻倍
+                        (bet.score * (if (bet.score == score) 3 else 1.5)).toInt()
                     } else {
                         // 亏损积分
                         -bet.score
@@ -326,7 +326,7 @@ object JHorseRacing : KotlinPlugin(
                         subject.sendMessage("没有这个编号的选手")
                         return@subscribeAlways
                     }
-                    if (coin == null || coin < 0) {
+                    if (coin == null || coin <= 0) {
                         subject.sendMessage("胡乱下分不可取")
                         return@subscribeAlways
                     }
@@ -339,6 +339,20 @@ object JHorseRacing : KotlinPlugin(
                     // 结算时再计数
                     // getPlayerStat(sender.id).betCount += 1
                     pool.add(Bet(sender.id, no, coin))
+                    subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
+                }
+                msg.startsWith("梭哈") -> {
+                    val no = msg.removePrefix("梭哈").trim().toIntOrNull()
+                    if (no == null || no < 1 || no > horseCount) {
+                        subject.sendMessage("没有这个编号的选手")
+                        return@subscribeAlways
+                    }
+                    val score = JHRPluginData.Scores[sender.id]
+                    if (score == null || score <= 0) {
+                        subject.sendMessage("没分还来捣什么乱，快走开")
+                        return@subscribeAlways
+                    }
+                    pool.add(Bet(sender.id, no, score))
                     subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
                 }
                 msg.startsWith("增加好事") -> {
