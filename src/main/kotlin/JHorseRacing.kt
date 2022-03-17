@@ -20,8 +20,8 @@ import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
 import top.jie65535.jhr.game.Horse
 import top.jie65535.jhr.game.PlayerStatistics
-import java.lang.Integer.min
 import java.util.*
+import kotlin.math.min
 import kotlin.random.Random
 
 
@@ -194,8 +194,16 @@ object JHorseRacing : KotlinPlugin(
                     val income = if (winners.indexOf(bet.number) != -1) {
                         // 胜场计数累积
                         stat.winCount += 1
-                        // 收益积分  若梭哈，则奖励翻倍
-                        (bet.score * (if (bet.score == score) 3 else 1.5)).toInt()
+                        // 收益积分
+                        (bet.score * if (bet.score == score)
+                            JHRPluginConfig.allinOdds // 若allin，则使用allin赔率
+                        else
+                            // 否则根据下注金额与余额的比值计算赔率
+                            min(
+                                JHRPluginConfig.minOdds,
+                                bet.score.toDouble() / score * JHRPluginConfig.maxOdds
+                            )
+                            ).toInt()
                     } else {
                         // 亏损积分
                         -bet.score
@@ -321,38 +329,39 @@ object JHorseRacing : KotlinPlugin(
                         return@subscribeAlways
                     }
                     val no = p[0].toIntOrNull()
-                    val coin = p[1].toIntOrNull()
-                    if (no == null || no < 1 || no > horseCount) {
-                        subject.sendMessage("没有这个编号的选手")
-                        return@subscribeAlways
-                    }
-                    if (coin == null || coin <= 0) {
-                        subject.sendMessage("胡乱下分不可取")
-                        return@subscribeAlways
-                    }
-                    val score = JHRPluginData.Scores[sender.id]
-                    if (score == null || score - coin < 0) {
-                        subject.sendMessage("没那么多可以下注的分惹")
-                        return@subscribeAlways
-                    }
-
-                    // 结算时再计数
-                    // getPlayerStat(sender.id).betCount += 1
-                    pool.add(Bet(sender.id, no, coin))
-                    subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
-                }
-                msg.startsWith("梭哈") -> {
-                    val no = msg.removePrefix("梭哈").trim().toIntOrNull()
                     if (no == null || no < 1 || no > horseCount) {
                         subject.sendMessage("没有这个编号的选手")
                         return@subscribeAlways
                     }
                     val score = JHRPluginData.Scores[sender.id]
                     if (score == null || score <= 0) {
-                        subject.sendMessage("没分还来捣什么乱，快走开")
+                        subject.sendMessage("你还没有积分哦，请通过签到获取积分再来")
                         return@subscribeAlways
                     }
-                    pool.add(Bet(sender.id, no, score))
+                    // 根据第二个参数确认动作
+                    val cmd = p[1]
+                    val coin: Int?
+                    // '梭哈'表示全压
+                    if (cmd == "梭哈" || cmd == "allin") {
+                        coin = score
+                    } else if (cmd == "随机" || cmd == "random" || cmd == "rand") {
+                        // '随机'则是系统随机选择下注积分
+                        coin = Random.nextInt(score) + 1
+                    } else {
+                        // 否则只允许输入数字作为下注积分
+                        coin = cmd.toIntOrNull()
+                        if (coin == null || coin <= 0) {
+                            subject.sendMessage("胡乱下分不可取")
+                            return@subscribeAlways
+                        }
+                    }
+
+                    if (score - coin < 0) {
+                        subject.sendMessage("没那么多可以下注的分惹")
+                        return@subscribeAlways
+                    }
+
+                    pool.add(Bet(sender.id, no, coin))
                     subject.sendMessage(JHRPluginConfig.betMessage[Random.nextInt(JHRPluginConfig.betMessage.size)].replace("?", no.toString()))
                 }
                 msg.startsWith("增加好事") -> {

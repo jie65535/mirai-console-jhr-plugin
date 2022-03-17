@@ -86,6 +86,15 @@ object JHRPluginConfig : AutoSavePluginConfig("HorseRacingPluginConfig") {
      */
     @ValueDescription("自动开始时间(s)")
     var autoStartTime by value(180)
+
+    @ValueDescription("保底赔率")
+    var minOdds by value(0.5)
+
+    @ValueDescription("最大赔率")
+    var maxOdds by value(4.0)
+
+    @ValueDescription("梭哈赔率")
+    var allinOdds by value(5.0)
 }
 //    @ValueDescription("赛马数量")
 //    val horseCount by value(5)
