@@ -9,7 +9,7 @@ object JHRCommand : CompositeCommand(
     description = "HorseRacing Commands"
 ) {
     @SubCommand
-    @Deprecated("开启赛马")
+    @Description("开启赛马")
     suspend fun CommandSender.enable(group: Long) {
         if (JHRPluginConfig.enabledGroups.indexOf(group) == -1)
             JHRPluginConfig.enabledGroups.add(group)
@@ -17,13 +17,13 @@ object JHRCommand : CompositeCommand(
     }
 
     @SubCommand
-    @Deprecated("开启赛马")
+    @Description("开启赛马")
     suspend fun CommandSender.disable(group: Long) {
         JHRPluginConfig.enabledGroups.remove(group)
         sendMessage("OK")
     }
     @SubCommand
-    @Deprecated("重载配置")
+    @Description("重载配置")
     suspend fun CommandSender.reload() {
         JHorseRacing.reloadPluginConfig(JHRPluginConfig)
         sendMessage("OK")

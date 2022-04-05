@@ -328,7 +328,11 @@ object JHorseRacing : KotlinPlugin(
                     if (p.size != 2) {
                         return@subscribeAlways
                     }
-                    val no = p[0].toIntOrNull()
+                    val no = if (p[0] == "?" || p[0] == "？") {
+                        Random.nextInt(horseCount) + 1
+                    } else {
+                        p[0].toIntOrNull()
+                    }
                     if (no == null || no < 1 || no > horseCount) {
                         subject.sendMessage("没有这个编号的选手")
                         return@subscribeAlways
