@@ -201,7 +201,6 @@ object JHorseRacing : KotlinPlugin(
                             // 否则根据下注金额与余额的比值计算赔率
                             (bet.score.toDouble() / 1000.0 * JHRPluginConfig.maxOdds)
                                 .coerceIn(JHRPluginConfig.minOdds, JHRPluginConfig.maxOdds)
-                                .toInt()
                     } else {
                         // 亏损积分
                         -bet.score
