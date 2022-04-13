@@ -199,11 +199,9 @@ object JHorseRacing : KotlinPlugin(
                             JHRPluginConfig.allinOdds // 若allin，则使用allin赔率
                         else
                             // 否则根据下注金额与余额的比值计算赔率
-                            min(
-                                JHRPluginConfig.minOdds,
-                                bet.score.toDouble() / score * JHRPluginConfig.maxOdds
-                            )
-                            ).toInt()
+                            (bet.score.toDouble() / 1000.0 * JHRPluginConfig.maxOdds)
+                                .coerceIn(JHRPluginConfig.minOdds, JHRPluginConfig.maxOdds)
+                                .toInt()
                     } else {
                         // 亏损积分
                         -bet.score
