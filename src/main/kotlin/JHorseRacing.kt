@@ -139,21 +139,26 @@ object JHorseRacing : KotlinPlugin(
                     ++horse.position
                 }
 
+                // 是否好事件
+                val isGoodEvent = Random.nextInt(77) > 32
                 // 比赛事件触发
-                val steps = (1..3).random() //事件触发前进或后退随机大小
-                // 事件赛马下标
-                val eventHorseIndex = Random.nextInt(rank.horses.size)
-                // 事件赛马
-                val eventHorse = rank.horses[eventHorseIndex]
+                val steps = (1..3).random() * if (isGoodEvent) 1 else -1 //事件触发前进或后退随机大小
                 // 触发事件
-                val eventMsg = if (Random.nextInt(77) > 32) {
-                    eventHorse.position += steps
+                val eventMsg = StringBuilder(if (isGoodEvent) {
                     JHRPluginConfig.goodEvents[Random.nextInt(JHRPluginConfig.goodEvents.size)]
                 } else {
-                    eventHorse.position -= steps
                     JHRPluginConfig.badEvents[Random.nextInt(JHRPluginConfig.badEvents.size)]
-                }
+                })
 
+                for (eventHorseIndex in rank.horses.indices.shuffled()) {
+                    // 找到事件中的问号
+                    val qIndex = eventMsg.indexOf('?')
+                    if (qIndex == -1) break
+                    // 移动
+                    rank.horses[eventHorseIndex].position += steps
+                    val number = (eventHorseIndex + 1).toString()
+                    eventMsg.replace(qIndex, qIndex+1, number)
+                }
 
                 // 计算获胜者
                 for ((i, horse) in rank.horses.withIndex()) {
@@ -162,9 +167,7 @@ object JHorseRacing : KotlinPlugin(
                     }
                 }
 
-                // 发送事件消息
-                val number = (eventHorseIndex + 1).toString()
-                subject.sendMessage(eventMsg.replace("?", number))
+                subject.sendMessage(eventMsg.toString())
                 delay(Random.nextLong(100, 200))
                 // 渲染赛马
                 subject.sendMessage(drawHorse(rank.horses))
