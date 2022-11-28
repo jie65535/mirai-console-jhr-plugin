@@ -46,9 +46,13 @@ class PlayerStatistics {
      */
     val totalProfit get() = totalWinScore + totalLossScore
 
+    /**
+     * 胜率
+     */
+    val winPercentage get() = if (betCount > 0) (winCount/betCount.toDouble()*100).toInt() else 0
+
     override fun toString(): String {
-        return "下注次数：${betCount}\n" +
-            "获胜次数：${winCount}\n" +
+        return "获胜次数：${winCount}/${betCount} (${winPercentage}%)\n" +
             "贡献次数：${contribution}\n" +
             "签到次数：${signCount}\n" +
             "下注积分：${totalBetScore}\n" +

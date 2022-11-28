@@ -549,6 +549,19 @@ object JHorseRacing : KotlinPlugin(
                     }
                     subject.sendMessage(ret.toString())
                 }
+                msg == "胜率榜" -> {
+                    logger.info("查询胜率榜")
+                    val msgB = MessageChainBuilder(11)
+                    msgB.append("胜率榜\n")
+                    JHRPluginData.playerStat.entries.filter {
+                        subject.contains(it.key)
+                    }.sortedByDescending { it.value.winPercentage }
+                        .take(10)
+                        .onEach {
+                            msgB.append("| ${it.value.winPercentage}% | ${subject[it.key]!!.nameCardOrNick}\n")
+                        }
+                    subject.sendMessage(msgB.asMessageChain())
+                }
             }
         }
 
