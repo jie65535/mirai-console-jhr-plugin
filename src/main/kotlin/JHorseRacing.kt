@@ -13,8 +13,7 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.MessageChainBuilder
+import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.info
 import top.jie65535.jhr.game.Bet
@@ -480,18 +479,30 @@ object JHorseRacing : KotlinPlugin(
                     }
                 }
                 msg == "好事列表" -> {
-                    subject.sendMessage(JHRPluginConfig.goodEvents.joinToString("\n"))
+                    subject.sendMessage(
+                        buildForwardMessage {
+                            add(bot, PlainText("编辑方法：\n增加好事 <内容>\n删除好事 <内容>"))
+                            JHRPluginConfig.goodEvents.forEach { add(bot, PlainText(it)) }})
                 }
                 msg == "坏事列表" -> {
-                    subject.sendMessage(JHRPluginConfig.badEvents.joinToString("\n"))
+                    subject.sendMessage(
+                        buildForwardMessage {
+                            add(bot, PlainText("编辑方法：\n增加坏事 <内容>\n删除坏事 <内容>"))
+                            JHRPluginConfig.badEvents.forEach { add(bot, PlainText(it)) }})
                 }
                 msg == "胜利词列表" -> {
-                    subject.sendMessage(JHRPluginConfig.winnerMessage.joinToString("\n"))
+                    subject.sendMessage(
+                        buildForwardMessage {
+                            add(bot, PlainText("编辑方法：\n增加胜利词 <内容>\n删除胜利词 <内容>"))
+                            JHRPluginConfig.winnerMessage.forEach { add(bot, PlainText(it)) }})
                 }
                 msg == "下注词列表" -> {
-                    subject.sendMessage(JHRPluginConfig.betMessage.joinToString("\n"))
+                    subject.sendMessage(
+                        buildForwardMessage {
+                            add(bot, PlainText("编辑方法：\n增加下注词 <内容>\n删除下注词 <内容>"))
+                            JHRPluginConfig.betMessage.forEach { add(bot, PlainText(it)) }})
                 }
-                msg == "排名" || msg == "积分榜" -> {
+                msg == "排名" || msg == "排行榜" || msg == "积分榜" -> {
                     val msgB = MessageChainBuilder(11)
                     msgB.append("积分榜\n")
                     JHRPluginData.Scores.entries.filter { subject.contains(it.key) }
@@ -558,6 +569,7 @@ object JHorseRacing : KotlinPlugin(
                     msgB.append("胜率榜\n")
                     JHRPluginData.playerStat.entries.filter {
                         subject.contains(it.key)
+                            && it.value.betCount > 10 // 至少押过 10 次才上榜
                     }.sortedByDescending { it.value.winPercentage }
                         .take(10)
                         .onEach {
